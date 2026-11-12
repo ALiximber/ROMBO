@@ -5,7 +5,7 @@ test('desktop: tres rondas, imagen actual, historial separado y exportación', a
   await page.setViewportSize({width:1440,height:1000});
   await page.getByLabel('¿Cómo te llamamos?').fill('Ana, "Norte"');
   await page.screenshot({path:'.qa/home-desktop.png',fullPage:true});
-  await page.getByRole('button',{name:'Comenzar',exact:true}).click();
+  await page.getByRole('button',{name:'Personalizar sesión'}).click();
   await page.getByRole('button',{name:'Iniciar demostración',exact:true}).click();
   for (let round=0;round<3;round++) {
     await expect(page.getByRole('button',{name:'Confirmar ubicación'})).toBeDisabled();
@@ -36,7 +36,6 @@ test('móvil: alterna paneles, conserva marcador y registra abandono', async ({p
   await page.screenshot({path:'.qa/home-mobile.png',fullPage:true});
   expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
   await page.getByRole('button',{name:'Comenzar',exact:true}).click();
-  await page.getByRole('button',{name:'Iniciar demostración'}).click();
   await page.getByRole('button',{name:'Mapa',exact:true}).click();
   const initialMap = await page.locator('.answer-map').boundingBox();
   const initialPlan = await page.locator('.leaflet-image-layer').boundingBox();
@@ -57,13 +56,14 @@ test('móvil: alterna paneles, conserva marcador y registra abandono', async ({p
   expect(saved[0].status).toBe('abandoned'); expect(saved[0].score).toBeNull(); expect(saved[0].guess).not.toBeNull();
 });
 test('sin token: instrucciones, evaluaciones bloqueadas e importación inválida', async ({page}) => {
-  await page.getByRole('button',{name:'Comenzar',exact:true}).click();
+  await page.getByRole('button',{name:'Personalizar sesión'}).click();
   await page.getByRole('button',{name:'Lugares reales',exact:true}).click();
-  await expect(page.getByText('VITE_MAPILLARY_ACCESS_TOKEN',{exact:true})).toBeVisible();
+  await expect(page.getByText('La instalación necesita conectar Mapillary',{exact:false})).toBeVisible();
   await expect(page.getByRole('button',{name:'Iniciar sesión',exact:true})).toBeDisabled();
-  await page.getByRole('button',{name:'Evaluación inicial',exact:false}).click();
-  await expect(page.getByText('Prepara al menos tres retos distintos', {exact:false})).toBeVisible();
-  await page.getByRole('button',{name:'Catálogo de retos',exact:true}).click();
+  await page.goto('/#preparacion');
+  await expect(page.getByText('VITE_MAPILLARY_ACCESS_TOKEN',{exact:true})).toBeVisible();
+  await page.locator('details summary').click();
+  await expect(page.getByText('Prepara al menos tres retos distintos', {exact:false}).first()).toBeVisible();
   await expect(page.getByRole('button',{name:'Buscar en Mapillary'})).toBeDisabled();
   await page.locator('input[type=file]').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from('{"version":1,"challenges":[{}]}')});
   await expect(page.getByRole('status')).toContainText('Faltan campos');

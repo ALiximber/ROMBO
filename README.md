@@ -33,11 +33,13 @@ VITE_MAPILLARY_ACCESS_TOKEN=TU_TOKEN_DE_CLIENTE
 
 Las variables `VITE_*` se incorporan al JavaScript y **quedan visibles en el cliente**. No deben contener secretos, contraseñas ni tokens privados/de usuario. El token público de cliente es inspeccionable en las herramientas del navegador. La aplicación no lo guarda en los resultados ni lo imprime en mensajes o registros propios. Las búsquedas usan el encabezado `Authorization`, no una URL con el token. [Documentación oficial de variables de Vite](https://vite.dev/guide/env-and-mode).
 
-## Preparar ubicaciones reales
+## Preparar ubicaciones reales y selección automática
+
+Con un token configurado puedes jugar de inmediato en modo **Práctica**: si el catálogo aún no tiene al menos tres retos revisados para la dificultad elegida, la aplicación busca automáticamente tres ubicaciones disponibles (separadas al menos 80 m) dentro de las **cinco zonas incluidas** (`Centro de Ciudad de México`, `Centro de Barcelona`, `Nyhavn y alrededores`, `Bastille y alrededores`, `Embarcadero, San Francisco`).
 
 El catálogo inicial está vacío de forma intencional. **No se inventan IDs, coordenadas de retos reales ni cobertura.** `public/catalog.empty.json` es un contenedor válido vacío.
 
-En **Catálogo de retos**:
+En el espacio de preparación (`/#preparacion`):
 
 1. Escribe una zona y sus límites verificados, en orden **oeste, sur, este, norte**, con grados decimales WGS84 separados por comas. No se admiten zonas que crucen el antimeridiano. Para la búsqueda, divide áreas mayores de 0.01 grados cuadrados en consultas pequeñas.
 2. Busca imágenes. Se solicitan hasta 30 metadatos por acción; por defecto se filtran panoramas 360°. Si no hay resultados, desmarca ese filtro o cambia la zona. Se priorizan panoramas y resultados con secuencia; una secuencia no demuestra por sí sola que existan conexiones navegables.
@@ -172,11 +174,14 @@ src/
     AnswerMap.tsx         Leaflet, respuesta y revelación del resultado
     StreetViewer.tsx      MapillaryJS, conexiones y demo ilustrada
     Game.tsx              Ronda, temporizador, resultado y resumen
-    CatalogEditor.tsx     Preparación y gestión de retos
+    CatalogEditor.tsx     Preparación y gestión de retos (/#preparacion)
     History.tsx           Historial y exportación
+    Zones.tsx             Zonas incluidas para selección automática
     Illustrations.tsx     Ilustraciones sintéticas, sin imágenes de terceros
-  data/demo.ts            Retos y posiciones sintéticos
-  lib/                    Geodesia, bloqueo, almacenamiento, API y validación
+  data/
+    demo.ts               Retos y posiciones sintéticos
+    zones.ts              Cinco zonas verificadas y escalas de mapa
+  lib/                    Geodesia, bloqueo, selección automática, almacenamiento, API y validación
 tests/                    Recorridos Playwright y servicio simulado
 public/                   Favicon, plano sintético y catálogo vacío
 ```

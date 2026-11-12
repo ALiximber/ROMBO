@@ -9,7 +9,7 @@ async function mockedMapillary(page: Page) {
   await page.route('**/node_modules/.vite/deps/mapillary-js.js*', route => route.fulfill({contentType:'text/javascript',body:`
     export const TransitionMode = { Instantaneous: 1 };
     export class Viewer {
-      constructor(options) { this.options=options; this.handlers={}; this.removed=false; window.__viewerOptions=options.component; options.container.textContent='Visor simulado para pruebas'; }
+      constructor(options) { this.options=options; this.handlers={}; this.removed=false; window.__viewerOptions=options.component; options.container.classList.add('mapillary-viewer'); options.container.textContent='Visor simulado para pruebas'; }
       on(name,handler) { (this.handlers[name] ||= []).push(handler); }
       emit(name,value) { if(!this.removed) for(const h of this.handlers[name]||[]) h(value); }
       async moveTo(id) {
@@ -34,11 +34,13 @@ const fixture = (id: string) => ({id:'mock-'+id,name:'Fixture sintético '+id,im
 test('adaptador simulado: eventos, bloqueo y posición actual al confirmar', async ({page}) => {
   await mockedMapillary(page); await page.goto('/');
   await page.evaluate(c => localStorage.setItem('rumbo.v1.catalog',JSON.stringify(c)),{version:1,challenges:['1001','1003','1004'].map(fixture)});
-  await page.reload(); await page.getByRole('button',{name:'Comenzar',exact:true}).click();
+  await page.reload(); await page.getByRole('button',{name:'Personalizar sesión'}).click();
   await page.getByRole('button',{name:'Lugares reales',exact:true}).click();
   // Make practice order deterministic for this fixture only.
   await page.evaluate(()=>{Math.random=()=>.5;});
   await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click();
+  const hostBox = await page.locator('.mapillary-host.mapillary-viewer').boundingBox();
+  expect(hostBox!.height).toBeGreaterThan(300);
   await page.getByRole('button',{name:'Marcar centro'}).click();
   await expect(page.getByRole('button',{name:'Confirmar ubicación'})).toBeEnabled();
   await page.getByRole('button',{name:'Conexión 1',exact:true}).click();
@@ -55,7 +57,7 @@ test('preparación simulada: token inválido, límite, búsqueda, revisión y ex
   await mockedMapillary(page);
   let status=401;
   await page.route('https://graph.mapillary.com/images?**', route => route.fulfill({status,contentType:'application/json',body:JSON.stringify(status===200?{data:[{id:'1001',geometry:{coordinates:[.001,.001]},is_pano:true,sequence:'synthetic-test-sequence'}]}:{error:{code:status===401?190:4,message:'Untrusted error body must never appear'}})}));
-  await page.goto('/'); await page.getByRole('button',{name:'Catálogo de retos',exact:true}).click();
+  await page.goto('/#preparacion');
   await page.getByLabel('Nombre de la zona').fill('Zona de prueba sintética');
   await page.getByLabel('Límites del mapa').fill('0,0,0.003,0.003');
   await page.getByRole('button',{name:'Buscar en Mapillary'}).click();
@@ -79,7 +81,7 @@ test('preparación simulada: token inválido, límite, búsqueda, revisión y ex
 test('imagen no disponible: reemplazo sin registrar error del jugador', async ({page}) => {
   await mockedMapillary(page); await page.goto('/');
   await page.evaluate(c=>localStorage.setItem('rumbo.v1.catalog',JSON.stringify(c)),{version:1,challenges:['404','1001','1003','1004'].map(fixture)});
-  await page.reload(); await page.getByRole('button',{name:'Comenzar',exact:true}).click(); await page.getByRole('button',{name:'Lugares reales',exact:true}).click();
+  await page.reload(); await page.getByRole('button',{name:'Personalizar sesión'}).click(); await page.getByRole('button',{name:'Lugares reales',exact:true}).click();
   await page.evaluate(()=>{Math.random=()=>.5;}); await page.getByRole('button',{name:'Iniciar sesión',exact:true}).click();
   await expect(page.getByRole('button',{name:'Reiniciar vista'})).toBeVisible();
   await page.getByRole('button',{name:'Usar otro reto'}).click();
@@ -88,5 +90,5 @@ test('imagen no disponible: reemplazo sin registrar error del jugador', async ({
   expect(await page.evaluate(()=>localStorage.getItem('rumbo.v1.study.records'))).toBeNull();
   await page.getByRole('button',{name:'Confirmar ubicación'}).click();
   const rows=await page.evaluate(()=>JSON.parse(localStorage.getItem('rumbo.v1.study.records')||'[]'));
-  expect(rows).toHaveLength(1); expect(rows[0].roundNumber).toBe(1); expect(rows[0].challengeId).toBe('mock-1004');
+  expect(rows).toHaveLength(1); expect(rows[0].roundNumber).toBe(1); expect(rows[0].challengeId).toBe('mock-1003');
 });

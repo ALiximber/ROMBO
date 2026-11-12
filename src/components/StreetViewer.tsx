@@ -34,6 +34,7 @@ export function StreetViewer({ challenge, tracker, onChange, preview, onError }:
         instance = new MapillaryViewer({ container: host.current!, accessToken: TOKEN, transitionMode: TransitionMode.Instantaneous,
           component: { cover: false, attribution: true, bearing: true, spatial: false, direction: false, sequence: false, keyboard: false, cache: false, marker: false, popup: false } });
         viewer.current = instance;
+        instance.resize();
         let sequenceEdges: NavigationEdge[] = [], spatialEdges: NavigationEdge[] = [];
         const updateEdges = () => setEdges([...new Map([...sequenceEdges, ...spatialEdges].map(e => [e.target, e])).values()]);
         instance.on('image', e => { if (disposed) return; try { tracker.image(adopt(e.image)); } catch { tracker.fail(); setError('Has llegado fuera de la zona del reto. Reinicia la vista para responder dentro de los límites.'); } notify(); });
@@ -43,6 +44,7 @@ export function StreetViewer({ challenge, tracker, onChange, preview, onError }:
         const image = await Promise.race([instance.moveTo(challenge.imageId), new Promise<never>((_, reject) => { timer.current = setTimeout(() => reject(new Error('timeout')), 25000); })]);
         if (disposed) return;
         if (timer.current) clearTimeout(timer.current);
+        instance.resize();
         tracker.image(adopt(image)); tracker.settle(); notify();
       } catch { if (!disposed) { tracker.fail(); const message = serviceError(); setError(message); callbacks.current.onError?.(message); notify(); } }
     }

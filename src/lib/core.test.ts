@@ -4,6 +4,8 @@ import { PositionTracker } from './tracker';
 import { csvCell, records, recordsCsv, saveRecord } from './storage';
 import { validateCatalog, evaluationIssues } from './catalog';
 import { serviceError } from './mapillary';
+import { prepareAutomaticSession } from './automatic';
+import { BUILTIN_ZONES, zoneBounds } from '../data/zones';
 import type { Challenge, RoundRecord } from '../types';
 describe('geodesia y puntos', () => {
   it('distancia cero para el mismo punto', () => expect(haversine({lat:19,lng:-99},{lat:19,lng:-99})).toBe(0));
@@ -42,4 +44,25 @@ describe('exportación y aislamiento de datos', () => {
 });
 describe('mensajes seguros de servicio', () => {
   it('distingue autorización, límite y ausencia', () => { expect(serviceError(401)).toContain('token'); expect(serviceError(429)).toContain('límite'); expect(serviceError(404)).toContain('no está disponible'); expect(serviceError()).toContain('conexión'); });
+});
+describe('selección automática de zonas', () => {
+  it('calcula límites válidos alrededor del ancla de cada zona incluida', () => {
+    for (const z of BUILTIN_ZONES) {
+      const b = zoneBounds(z, 'initial');
+      expect(inBounds(z.anchor, b)).toBe(true);
+      expect(b[0]).toBeLessThan(b[2]);
+      expect(b[1]).toBeLessThan(b[3]);
+    }
+  });
+  it('selecciona 3 retos separados >= 80 m y guarda reservas sin repetir imágenes excluidas', async () => {
+    const search = vi.fn(async (bounds) => [0, 1, 2, 3].map(i => ({
+      id: String(1000 + i),
+      geometry: { coordinates: [bounds[0] + 0.001 * (i + 1), (bounds[1] + bounds[3]) / 2] as [number, number] },
+      is_pano: true,
+      sequence: 'seq-' + i,
+    })));
+    const res = await prepareAutomaticSession({ difficulty: 'initial', excludedImageIds: ['1000'] }, { search, zones: [BUILTIN_ZONES[0]], random: () => 0.5 });
+    expect(res.challenges).toHaveLength(3);
+    expect(res.challenges.every(c => c.imageId !== '1000' && c.selection === 'automatic')).toBe(true);
+  });
 });
