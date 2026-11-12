@@ -1,0 +1,6 @@
+{
+  "name": "rumbo-espacial", "version": "1.0.0", "private": true, "type": "module",
+  "scripts": { "dev": "vite --host 127.0.0.1", "build": "tsc -b && vite build", "preview": "vite preview --host 127.0.0.1", "test": "vitest run", "test:watch": "vitest", "test:e2e": "playwright test" },
+  "dependencies": { "react": "^19.2.0", "react-dom": "^19.2.0", "mapillary-js": "^4.1.2", "leaflet": "1.9.4", "lucide-react": "^0.468.0" },
+  "devDependencies": { "@types/react": "^19.2.0", "@types/react-dom": "^19.2.0", "@types/leaflet": "^1.9.21", "@vitejs/plugin-react": "^5.0.0", "typescript": "~5.9.3", "vite": "^7.3.0", "vitest": "^4.0.0", "@playwright/test": "^1.56.0" }
+}

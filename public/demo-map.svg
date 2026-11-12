@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400">
+  <title>Distrito imaginario: plano sintético de demostración</title>
+  <rect width="600" height="400" fill="#ebeade"/>
+  <g fill="#d9d9ce" stroke="#f3f2e8" stroke-width="4"><path d="M25 20h105v86H25zM157 20h102v86H157zM285 20h117v86H285zM433 20h140v86H433zM25 134h105v82H25zM25 246h105v130H25zM157 246h102v130H157zM285 246h117v130H285zM433 246h140v130H433zM433 134h140v82H433z"/></g>
+  <rect x="157" y="134" width="245" height="82" rx="6" fill="#b7c9ac"/>
+  <path d="M175 175h207m-100-25v51" stroke="#e3e5cd" stroke-width="9"/><circle cx="282" cy="175" r="21" fill="#e1e3cb"/><circle cx="282" cy="175" r="11" fill="#acc7c5"/>
+  <g fill="#92b08d"><circle cx="182" cy="150" r="8"/><circle cx="182" cy="201" r="8"/><circle cx="212" cy="150" r="8"/><circle cx="212" cy="201" r="8"/><circle cx="348" cy="150" r="8"/><circle cx="348" cy="201" r="8"/><circle cx="378" cy="150" r="8"/><circle cx="378" cy="201" r="8"/></g>
+  <g stroke="#faf9f2" stroke-width="20" fill="none"><path d="M0 120h600M0 231h600M143 0v400M272 0v120M272 231v169M417 0v400"/></g>
+  <g stroke="#d2cebd" stroke-width="1" fill="none"><path d="M0 120h600M0 231h600M143 0v400M417 0v400"/></g>
+  <g fill="#c5c4b6"><path d="M40 34h60v22H40zM40 66h45v26H40zM40 267h64v45H40zM40 327h54v29H40zM170 34h60v22h-60zM170 66h45v26h-45zM170 267h64v45h-64zM170 327h54v29h-54zM303 34h60v22h-60zM303 66h45v26h-45zM303 267h64v45h-64zM303 327h54v29h-54zM455 34h60v22h-60zM455 66h90v26h-90zM455 267h64v45h-64zM455 327h54v29h-54z"/></g>
+  <g fill="#5b6455" font-family="sans-serif" font-size="10" letter-spacing="2"><text x="242" y="244">AVENIDA DEL PARQUE</text><text x="232" y="190" font-size="8">PARQUE CENTRAL</text><text transform="translate(139 329) rotate(-90)" font-size="8">CALLE DE LA PLAZA</text></g>
+</svg>

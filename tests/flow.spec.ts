@@ -1,0 +1,70 @@
+import { test, expect } from '@playwright/test';
+test.beforeEach(async ({page}) => { await page.goto('/'); });
+test('desktop: tres rondas, imagen actual, historial separado y exportación', async ({page}) => {
+  const errors: string[] = []; page.on('pageerror',e => errors.push(e.message));
+  await page.setViewportSize({width:1440,height:1000});
+  await page.getByLabel('¿Cómo te llamamos?').fill('Ana, "Norte"');
+  await page.screenshot({path:'.qa/home-desktop.png',fullPage:true});
+  await page.getByRole('button',{name:'Comenzar',exact:true}).click();
+  await page.getByRole('button',{name:'Iniciar demostración',exact:true}).click();
+  for (let round=0;round<3;round++) {
+    await expect(page.getByRole('button',{name:'Confirmar ubicación'})).toBeDisabled();
+    await page.getByRole('button',{name:'Marcar centro'}).click();
+    await page.getByRole('button',{name:'Siguiente imagen',exact:true}).click();
+    await expect(page.getByRole('button',{name:'Espera a que cargue la imagen…'})).toBeDisabled();
+    await expect(page.getByRole('button',{name:'Confirmar ubicación'})).toBeEnabled();
+    if(round===0) { await page.getByRole('button',{name:'Ver pista 1'}).click(); await page.getByRole('button',{name:'No',exact:true}).click(); await page.screenshot({path:'.qa/game-desktop.png',fullPage:true}); }
+    await page.getByRole('button',{name:'Confirmar ubicación'}).click();
+    await expect(page.getByText('ERROR DE UBICACIÓN',{exact:true})).toBeVisible();
+    if(round===0) await page.screenshot({path:'.qa/result-desktop.png',fullPage:true});
+    await page.getByRole('button',{name:round===2?'Ver resumen de sesión':'Siguiente ronda',exact:true}).click();
+  }
+  await expect(page.getByText('3 de 3 rondas completadas.',{exact:false})).toBeVisible();
+  const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('rumbo.v1.demo.records') || '[]'));
+  expect(saved).toHaveLength(3); expect(saved[0].imageId).toBe('synthetic-0-1'); expect(saved[0].imageChanges).toBe(1); expect(saved[0].hintsUsed).toHaveLength(1); expect(saved[0].familiarity).toBe('no'); expect(saved[0].status).toBe('completed'); expect(saved[0].actual.lng).toBeCloseTo(-.00065);
+  expect(await page.evaluate(()=>localStorage.getItem('rumbo.v1.study.records'))).toBeNull();
+  await page.getByRole('button',{name:'Ver historial y exportar'}).click();
+  await expect(page.getByText('Tu primer recorrido empieza aquí.')).toBeVisible();
+  await page.getByRole('button',{name:'Demostración',exact:true}).click();
+  await expect(page.locator('tbody tr')).toHaveCount(3);
+  const json = page.waitForEvent('download'); await page.getByRole('button',{name:'JSON',exact:true}).click(); expect((await json).suggestedFilename()).toContain('demostracion');
+  const csv = page.waitForEvent('download'); await page.getByRole('button',{name:'CSV',exact:true}).click(); expect((await csv).suggestedFilename()).toContain('.csv');
+  expect(errors).toEqual([]);
+});
+test('móvil: alterna paneles, conserva marcador y registra abandono', async ({page}) => {
+  await page.setViewportSize({width:390,height:844});
+  await page.screenshot({path:'.qa/home-mobile.png',fullPage:true});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.getByRole('button',{name:'Comenzar',exact:true}).click();
+  await page.getByRole('button',{name:'Iniciar demostración'}).click();
+  await page.getByRole('button',{name:'Mapa',exact:true}).click();
+  const initialMap = await page.locator('.answer-map').boundingBox();
+  const initialPlan = await page.locator('.leaflet-image-layer').boundingBox();
+  expect(initialPlan!.width).toBeLessThanOrEqual(initialMap!.width);
+  await page.getByRole('button',{name:'Marcar centro'}).click();
+  await page.getByRole('button',{name:'Explorar',exact:true}).last().click();
+  await page.getByRole('button',{name:'Siguiente imagen',exact:true}).click();
+  await page.getByRole('button',{name:'Mapa',exact:true}).click();
+  const returnedPlan = await page.locator('.leaflet-image-layer').boundingBox();
+  expect(returnedPlan!.width).toBeCloseTo(initialPlan!.width,0);
+  await expect(page.getByText('Marcador colocado. Puedes ajustarlo.')).toBeVisible();
+  await expect(page.getByRole('button',{name:'Confirmar ubicación'})).toBeEnabled();
+  await page.screenshot({path:'.qa/game-mobile.png',fullPage:true});
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth)).toBeLessThanOrEqual(390);
+  await page.getByRole('button',{name:'Salir de la sesión'}).click();
+  await page.getByRole('button',{name:'Terminar sesión',exact:true}).click();
+  const saved = await page.evaluate(()=>JSON.parse(localStorage.getItem('rumbo.v1.demo.records')||'[]'));
+  expect(saved[0].status).toBe('abandoned'); expect(saved[0].score).toBeNull(); expect(saved[0].guess).not.toBeNull();
+});
+test('sin token: instrucciones, evaluaciones bloqueadas e importación inválida', async ({page}) => {
+  await page.getByRole('button',{name:'Comenzar',exact:true}).click();
+  await page.getByRole('button',{name:'Lugares reales',exact:true}).click();
+  await expect(page.getByText('VITE_MAPILLARY_ACCESS_TOKEN',{exact:true})).toBeVisible();
+  await expect(page.getByRole('button',{name:'Iniciar sesión',exact:true})).toBeDisabled();
+  await page.getByRole('button',{name:'Evaluación inicial',exact:false}).click();
+  await expect(page.getByText('Prepara al menos tres retos distintos', {exact:false})).toBeVisible();
+  await page.getByRole('button',{name:'Catálogo de retos',exact:true}).click();
+  await expect(page.getByRole('button',{name:'Buscar en Mapillary'})).toBeDisabled();
+  await page.locator('input[type=file]').setInputFiles({name:'invalid.json',mimeType:'application/json',buffer:Buffer.from('{"version":1,"challenges":[{}]}')});
+  await expect(page.getByRole('status')).toContainText('Faltan campos');
+});

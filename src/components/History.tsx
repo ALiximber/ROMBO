@@ -1,0 +1,19 @@
+import { useState } from 'react';
+import { Download, FolderOpen, ShieldCheck } from 'lucide-react';
+import { DIFFICULTIES, MODES } from '../types';
+import { download, records, recordsCsv } from '../lib/storage';
+import { formatTime, meters } from '../lib/geo';
+export function History() {
+  const [demo, setDemo] = useState(false), [alias, setAlias] = useState('');
+  const all = records(demo), rows = all.filter(r => !alias || r.alias === alias);
+  const complete = rows.filter(r => r.status === 'completed');
+  function exportRows(format: 'json' | 'csv') { download(`rumbo-${demo ? 'demostracion' : 'estudio'}-${new Date().toISOString().slice(0,10)}.${format}`, format === 'json' ? JSON.stringify({ version: 1, source: demo ? 'demo' : 'study', records: rows }, null, 2) : recordsCsv(rows), format === 'json' ? 'application/json' : 'text/csv'); }
+  return <main className="page"><div className="page-heading"><div><span className="eyebrow">CADA RECORRIDO DEJA UNA REFERENCIA</span><h1>Tu historial de exploración.</h1><p>Revisa tus sesiones y exporta los datos del proyecto.</p></div><ShieldCheck className="heading-icon" size={36}/></div>
+    <div className="history-toolbar"><div className="segmented"><button className={!demo ? 'active' : ''} onClick={() => { setDemo(false); setAlias(''); }}>Datos del estudio</button><button className={demo ? 'active' : ''} onClick={() => { setDemo(true); setAlias(''); }}>Demostración</button></div><div className="button-row"><button className="button secondary small" disabled={!rows.length} onClick={() => exportRows('csv')}><Download size={16}/> CSV</button><button className="button secondary small" disabled={!rows.length} onClick={() => exportRows('json')}><Download size={16}/> JSON</button></div></div>
+    {demo && <div className="notice">Estos registros usan escenarios y coordenadas sintéticos. Se almacenan y exportan por separado de los datos del estudio.</div>}
+    <label className="alias-filter">Filtrar por alias<select value={alias} onChange={e => setAlias(e.target.value)}><option value="">Todos los alias</option>{[...new Set(all.map(r => r.alias))].map(a => <option key={a}>{a}</option>)}</select></label>
+    <div className="history-stats"><span><strong>{new Set(rows.map(r => r.sessionId)).size}</strong> sesiones</span><span><strong>{complete.length}</strong> rondas completadas</span><span><strong>{rows.length - complete.length}</strong> abandonadas</span></div>
+    <section className="panel history-table">{!rows.length ? <div className="empty-state"><FolderOpen size={44}/><h2>Tu primer recorrido empieza aquí.</h2><p>Cuando completes una ronda, sus resultados aparecerán en este espacio.</p></div> : <div className="table-scroll"><table><thead><tr><th>Fecha / alias</th><th>Sesión · ronda</th><th>Modo</th><th>Dificultad</th><th>Error</th><th>Tiempo</th><th>Estado</th></tr></thead><tbody>{[...rows].reverse().map(r => <tr key={r.roundId}><td>{new Date(r.date).toLocaleString('es-MX')}<small>{r.alias}</small></td><td title={r.sessionId}>{r.sessionId.slice(0,8)} · {r.roundNumber}</td><td>{MODES[r.mode]}</td><td>{DIFFICULTIES[r.difficulty]}</td><td><strong>{r.errorMeters === null ? '—' : meters(r.errorMeters)}</strong></td><td>{formatTime(r.elapsedSeconds)}</td><td><span className={`status ${r.status}`}>{r.status === 'completed' ? 'Completada' : 'Abandonada'}</span></td></tr>)}</tbody></table></div>}</section>
+    <div className="notice"><ShieldCheck size={22}/><div><strong>Guardado en este navegador</strong><p>Exporta una copia al terminar. Borrar los datos del navegador o cambiar de dispositivo puede dejarte sin este historial. Los alias y resultados no se envían a un servidor del proyecto.</p></div></div><p className="research-note">Se muestran resultados descriptivos, sin estimar una mejora ni un efecto causal. Compara únicamente conjuntos revisados y condiciones equivalentes. Las evaluaciones no son pruebas psicológicas validadas.</p>
+  </main>;
+}
