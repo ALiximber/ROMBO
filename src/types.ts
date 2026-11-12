@@ -7,7 +7,8 @@ export interface Challenge {
   id: string; name: string; imageId: string; zone: string; bounds: Bounds;
   difficulty: Difficulty; set: Mode; hints: string[]; explanation: string;
   reviewed: boolean; reviewedAt: string; criteria: string; pairKey: string;
-  scaleMeters: number; demo?: boolean;
+  scaleMeters: number; demo?: boolean; selection?: 'automatic' | 'catalog';
+  zoneId?: string; sequenceId?: string; availabilityCheckedAt?: string;
 }
 export interface Catalog { version: 1; challenges: Challenge[] }
 export interface ImagePosition { id: string; point: Point }
@@ -18,7 +19,8 @@ export interface RoundRecord {
   guess: Point | null; errorMeters: number | null; elapsedSeconds: number;
   score: number | null; scaleMeters: number; hintsUsed: string[]; imageChanges: number;
   familiarity: Familiarity; status: 'completed' | 'abandoned'; pairKey: string;
+  selection?: 'automatic' | 'catalog' | 'demo'; difficultyReviewed?: boolean; mapBounds?: Bounds;
 }
-export interface Session { id: string; alias: string; mode: Mode; difficulty: Difficulty; demo: boolean; challenges: Challenge[] }
+export interface Session { id: string; alias: string; mode: Mode; difficulty: Difficulty; demo: boolean; challenges: Challenge[]; reserves?: Challenge[] }
 export const DIFFICULTIES: Record<Difficulty, string> = { initial: 'Inicial', intermediate: 'Intermedia', advanced: 'Avanzada' };
 export const MODES: Record<Mode, string> = { practice: 'Práctica', pre: 'Evaluación inicial', post: 'Evaluación final' };

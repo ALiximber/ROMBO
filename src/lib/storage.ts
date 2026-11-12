@@ -27,6 +27,6 @@ export function csvCell(value: unknown): string {
   return '"' + text.replaceAll('"', '""') + '"';
 }
 export function recordsCsv(rows: RoundRecord[]): string {
-  const keys: (keyof RoundRecord)[] = ['version','alias','sessionId','roundId','roundNumber','date','source','mode','difficulty','challengeId','zone','imageId','actual','guess','errorMeters','elapsedSeconds','score','scaleMeters','hintsUsed','imageChanges','familiarity','status','pairKey'];
+  const keys: (keyof RoundRecord)[] = ['version','alias','sessionId','roundId','roundNumber','date','source','selection','mode','difficulty','difficultyReviewed','challengeId','zone','mapBounds','imageId','actual','guess','errorMeters','elapsedSeconds','score','scaleMeters','hintsUsed','imageChanges','familiarity','status','pairKey'];
   return '\uFEFF' + [keys.map(csvCell).join(','), ...rows.map(row => keys.map(key => csvCell(row[key])).join(','))].join('\r\n');
 }
